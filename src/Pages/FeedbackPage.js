@@ -11,6 +11,7 @@ export default function TwoTextareas() {
   const navigate = useNavigate();
 
   let { id } = useParams();
+    const params = new URLSearchParams(window.location.search);
 
     const sheetName = id || params.get("Sheet1");
 
