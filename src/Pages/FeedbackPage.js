@@ -12,6 +12,8 @@ export default function TwoTextareas() {
 
   let { id } = useParams();
 
+    const sheetName = id || params.get("Sheet1");
+
   useEffect(() => {
     // 👇 Updated Sheet ID
     const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
