@@ -7,13 +7,14 @@ export default function TwoTextareas() {
   const [right, setRight] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [usedIndexes, setUsedIndexes] = useState([]);
-  const [currentIndex, setCurrentIndex] = useState(null);
+  const [sheetLink, setSheetLink] = useState("");
   const navigate = useNavigate();
 
   let { id } = useParams();
 
   useEffect(() => {
-    const SPREADSHEET_ID = "1-a2Bvdg6Jx7EEu4gZ6y0NVFrFtKFktJ17vb-S79NrGs";
+    // 👇 Updated Sheet ID
+    const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
 
     const params = new URLSearchParams(window.location.search);
     const sheetName = id || params.get("Sheet1");
@@ -33,24 +34,29 @@ export default function TwoTextareas() {
         return res.text();
       })
       .then((csvText) => {
-        const rows = csvText.split("\n").slice(1); // skip header
-        const parsedData = rows
-          .map((row) => {
-            const [suggestion, link] = row.split(",").map((c) => c?.trim()?.replace(/^"|"$/g, ""));
-            if (suggestion) return { suggestion, link };
-            return null;
-          })
-          .filter(Boolean);
+        const rows = csvText.split("\n").slice(1);
+        const parsedSuggestions = [];
+        let foundLink = "";
 
-        if (parsedData.length === 0) {
+        rows.forEach((row) => {
+          const [suggestion, link] = row
+            .split(",")
+            .map((c) => c?.trim()?.replace(/^"|"$/g, ""));
+
+          if (suggestion) parsedSuggestions.push(suggestion);
+          if (!foundLink && link) foundLink = link;
+        });
+
+        if (parsedSuggestions.length === 0) {
           alert(`No data found in sheet "${sheetName}"`);
           return;
         }
 
-        setSuggestions(parsedData);
-        const index = Math.floor(Math.random() * parsedData.length);
-        setLeft(parsedData[index].suggestion);
-        setCurrentIndex(index);
+        setSuggestions(parsedSuggestions);
+        setSheetLink(foundLink || "");
+
+        const index = Math.floor(Math.random() * parsedSuggestions.length);
+        setLeft(parsedSuggestions[index]);
         setUsedIndexes([index]);
       })
       .catch((err) => {
@@ -64,12 +70,11 @@ export default function TwoTextareas() {
       try {
         await navigator.clipboard.writeText(left);
 
-        // ✅ Redirect after copy
-        const currentSuggestion = suggestions[currentIndex];
-        if (currentSuggestion?.link) {
-          window.open(currentSuggestion.link, "_blank"); // open in new tab
+        // 🔗 Redirect to the one link per sheet
+        if (sheetLink) {
+          window.open(sheetLink, "_blank"); // open in new tab
         } else {
-          alert("No link available for this suggestion.");
+          alert("No link available for this sheet.");
         }
       } catch (err) {
         alert("Failed to copy text.");
@@ -87,21 +92,15 @@ export default function TwoTextareas() {
       index = Math.floor(Math.random() * suggestions.length);
     } while (usedIndexes.includes(index) && usedIndexes.length < suggestions.length);
 
-    setLeft(suggestions[index].suggestion);
-    setCurrentIndex(index);
+    setLeft(suggestions[index]);
     setUsedIndexes([...usedIndexes, index]);
-  };
-
-  const handleClear = () => {
-    setLeft("");
-    setRight("");
   };
 
   return (
     <div className="tt-wrapper">
       <div className="tt-section">
         <label className="tt-label">
-          First textarea
+          {sheetName}
           <textarea
             value={left}
             onChange={(e) => setLeft(e.target.value)}
@@ -110,9 +109,11 @@ export default function TwoTextareas() {
             rows={6}
           />
         </label>
+
         <button type="button" className="tt-btn" onClick={handleCopy}>
           Copy Text
         </button>
+
         <button
           type="button"
           className="tt-btn tt-btn-secondary"
