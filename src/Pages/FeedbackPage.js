@@ -148,7 +148,7 @@ console.log(sheetName, "sahiew");
         </button>
       </div>
 
-      <div className="tt-section">
+      {/* <div className="tt-section">
         <label className="tt-label">
           Second textarea
           <textarea
@@ -162,7 +162,7 @@ console.log(sheetName, "sahiew");
         <button type="button" className="tt-btn tt-btn-danger" onClick={handleClear}>
           Clear Both
         </button>
-      </div>
+      </div> */}
     </div>
   );
 }
