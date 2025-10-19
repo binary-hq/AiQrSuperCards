@@ -1,83 +1,148 @@
 import React, { useEffect, useState } from "react";
 import "./FeedbackPage.css";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 export default function TwoTextareas() {
   const [left, setLeft] = useState("");
-  const [right, setRight] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [usedIndexes, setUsedIndexes] = useState([]);
   const [sheetLink, setSheetLink] = useState("");
-  const navigate = useNavigate();
+  const [currentIndex, setCurrentIndex] = useState(null);
 
   let { id } = useParams();
-    const params = new URLSearchParams(window.location.search);
 
-    const sheetName = id || params.get("Sheet1");
+  const [labelText, setLabelText] = useState("First textarea");
+
+
+//   useEffect(() => {
+//     // ✅ Your new Google Sheet ID
+//     const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
+
+//     const params = new URLSearchParams(window.location.search);
+//     const sheetName = id || params.get("Sheet1");
+
+//     if (!sheetName) {
+//       alert("No sheet name provided!");
+//       return;
+//     }
+
+//     const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
+//       sheetName
+//     )}`;
+
+//     fetch(SHEET_CSV_URL)
+//       .then((res) => {
+//         if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
+//         return res.text();
+//       })
+//       .then((csvText) => {
+//         const rows = csvText.split("\n").slice(1); // skip header
+//         const suggestionsArr = [];
+
+//         let link = "";
+//         rows.forEach((row) => {
+//           const [suggestion, linkCell] = row
+//             .split(",")
+//             .map((c) => c?.trim()?.replace(/^"|"$/g, ""));
+//           if (suggestion) suggestionsArr.push(suggestion);
+//           if (!link && linkCell) link = linkCell; // take first valid link
+//         });
+
+//         if (suggestionsArr.length === 0) {
+//           alert(`No data found in sheet "${sheetName}"`);
+//           return;
+//         }
+
+//         setSuggestions(suggestionsArr);
+//         setSheetLink(link || "");
+//         const index = Math.floor(Math.random() * suggestionsArr.length);
+//         setLeft(suggestionsArr[index]);
+//         setCurrentIndex(index);
+//         setUsedIndexes([index]);
+//       })
+//       .catch((err) => {
+//         console.error(err);
+//         alert(`Error loading data for sheet "${sheetName}".`);
+//       });
+//   }, [id]);
+
 
   useEffect(() => {
-    // 👇 Updated Sheet ID
-    const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
+  // ✅ Your new Google Sheet ID
+  const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
 
-    const params = new URLSearchParams(window.location.search);
-    const sheetName = id || params.get("Sheet1");
+  const params = new URLSearchParams(window.location.search);
+  const sheetName = id || params.get("Sheet1");
 
-    if (!sheetName) {
-      alert("No sheet name provided!");
-      return;
-    }
+  if (!sheetName) {
+    alert("No sheet name provided!");
+    return;
+  }
 
-    const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
-      sheetName
-    )}`;
+  const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
+    sheetName
+  )}`;
 
-    fetch(SHEET_CSV_URL)
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
-        return res.text();
-      })
-      .then((csvText) => {
-        const rows = csvText.split("\n").slice(1);
-        const parsedSuggestions = [];
-        let foundLink = "";
+  fetch(SHEET_CSV_URL)
+    .then((res) => {
+      if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
+      return res.text();
+    })
+    .then((csvText) => {
+      const rows = csvText.split("\n").map((r) =>
+        r.split(",").map((c) => c.trim().replace(/^"|"$/g, ""))
+      );
 
-        rows.forEach((row) => {
-          const [suggestion, link] = row
-            .split(",")
-            .map((c) => c?.trim()?.replace(/^"|"$/g, ""));
+      const suggestionsArr = [];
+      let link = "";
+      let nameLabel = "";
 
-          if (suggestion) parsedSuggestions.push(suggestion);
-          if (!foundLink && link) foundLink = link;
-        });
+      // ✅ Find "Name" header and take C2 (name value)
+      const headerRow = rows[0];
+      const nameIndex = headerRow.indexOf("Name");
+      if (nameIndex !== -1 && rows[1] && rows[1][nameIndex]) {
+        nameLabel = rows[1][nameIndex];
+      }
 
-        if (parsedSuggestions.length === 0) {
-          alert(`No data found in sheet "${sheetName}"`);
-          return;
-        }
-
-        setSuggestions(parsedSuggestions);
-        setSheetLink(foundLink || "");
-
-        const index = Math.floor(Math.random() * parsedSuggestions.length);
-        setLeft(parsedSuggestions[index]);
-        setUsedIndexes([index]);
-      })
-      .catch((err) => {
-        console.error(err);
-        alert(`Error loading data for sheet "${sheetName}".`);
+      rows.slice(1).forEach((row) => {
+        if (row[0]) suggestionsArr.push(row[0]);
+        if (!link && row[1]) link = row[1];
       });
-  }, [id]);
+
+      if (suggestionsArr.length === 0) {
+        alert(`No data found in sheet "${sheetName}"`);
+        return;
+      }
+
+      setSuggestions(suggestionsArr);
+      setSheetLink(link || "");
+      const index = Math.floor(Math.random() * suggestionsArr.length);
+      setLeft(suggestionsArr[index]);
+      setCurrentIndex(index);
+      setUsedIndexes([index]);
+
+      // ✅ set label value (C2)
+      if (nameLabel) {
+        setLabelText(nameLabel);
+      }
+    })
+    .catch((err) => {
+      console.error(err);
+      alert(`Error loading data for sheet "${sheetName}".`);
+    });
+}, [id]);
+
 
   const handleCopy = async () => {
     if (left.trim() !== "") {
       try {
         await navigator.clipboard.writeText(left);
 
-        // 🔗 Redirect to the one link per sheet
+        // ✅ Redirect to sheet-level link (one link per sheet)
         if (sheetLink) {
-          window.open(sheetLink, "_blank"); // open in new tab
+          window.open(sheetLink, "_blank"); // opens in a new tab
         } else {
-          alert("No link available for this sheet.");
+          alert("No link found for this sheet.");
         }
       } catch (err) {
         alert("Failed to copy text.");
@@ -96,6 +161,7 @@ export default function TwoTextareas() {
     } while (usedIndexes.includes(index) && usedIndexes.length < suggestions.length);
 
     setLeft(suggestions[index]);
+    setCurrentIndex(index);
     setUsedIndexes([...usedIndexes, index]);
   };
 
@@ -103,7 +169,8 @@ export default function TwoTextareas() {
     <div className="tt-wrapper">
       <div className="tt-section">
         <label className="tt-label">
-          {sheetName}
+          {labelText}
+
           <textarea
             value={left}
             onChange={(e) => setLeft(e.target.value)}
@@ -112,11 +179,9 @@ export default function TwoTextareas() {
             rows={6}
           />
         </label>
-
         <button type="button" className="tt-btn" onClick={handleCopy}>
           Copy Text
         </button>
-
         <button
           type="button"
           className="tt-btn tt-btn-secondary"
