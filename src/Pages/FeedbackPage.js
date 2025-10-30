@@ -143,7 +143,7 @@ export default function TwoTextareas() {
           className="tt-btn tt-btn-secondary"
           onClick={handleNewSuggestion}
         >
-          Suggestions
+          new Suggestionsss
         </button>
       </div>
     </div>
