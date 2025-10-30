@@ -136,14 +136,14 @@ export default function TwoTextareas() {
           />
         </label>
         <button type="button" className="tt-btn" onClick={handleCopy}>
-          Copy Text
+          Copy & Review
         </button>
         <button
           type="button"
           className="tt-btn tt-btn-secondary"
           onClick={handleNewSuggestion}
         >
-          new Suggestionsss
+          More Suggestions
         </button>
       </div>
     </div>
