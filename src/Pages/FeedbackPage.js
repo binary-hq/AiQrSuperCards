@@ -14,57 +14,6 @@ export default function TwoTextareas() {
   const [labelText, setLabelText] = useState("First textarea");
 
 
-//   useEffect(() => {
-//     // ✅ Your new Google Sheet ID
-//     const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
-
-//     const params = new URLSearchParams(window.location.search);
-//     const sheetName = id || params.get("Sheet1");
-
-//     if (!sheetName) {
-//       alert("No sheet name provided!");
-//       return;
-//     }
-
-//     const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
-//       sheetName
-//     )}`;
-
-//     fetch(SHEET_CSV_URL)
-//       .then((res) => {
-//         if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
-//         return res.text();
-//       })
-//       .then((csvText) => {
-//         const rows = csvText.split("\n").slice(1); // skip header
-//         const suggestionsArr = [];
-
-//         let link = "";
-//         rows.forEach((row) => {
-//           const [suggestion, linkCell] = row
-//             .split(",")
-//             .map((c) => c?.trim()?.replace(/^"|"$/g, ""));
-//           if (suggestion) suggestionsArr.push(suggestion);
-//           if (!link && linkCell) link = linkCell; // take first valid link
-//         });
-
-//         if (suggestionsArr.length === 0) {
-//           alert(`No data found in sheet "${sheetName}"`);
-//           return;
-//         }
-
-//         setSuggestions(suggestionsArr);
-//         setSheetLink(link || "");
-//         const index = Math.floor(Math.random() * suggestionsArr.length);
-//         setLeft(suggestionsArr[index]);
-//         setCurrentIndex(index);
-//         setUsedIndexes([index]);
-//       })
-//       .catch((err) => {
-//         console.error(err);
-//         alert(`Error loading data for sheet "${sheetName}".`);
-//       });
-//   }, [id]);
 
 
   useEffect(() => {
