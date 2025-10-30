@@ -114,6 +114,13 @@ export default function TwoTextareas() {
     setUsedIndexes([...usedIndexes, index]);
   };
 
+
+
+
+
+
+
+
   return (
     <div className="tt-wrapper">
       <div className="tt-section">
@@ -136,7 +143,7 @@ export default function TwoTextareas() {
           className="tt-btn tt-btn-secondary"
           onClick={handleNewSuggestion}
         >
-          New Suggestion
+          Suggestions
         </button>
       </div>
     </div>
