@@ -12,7 +12,7 @@
 
 .tt-title {
   margin: 0 0 35px 0;
-  font-size: 30px;
+  font-size: 300px;
   font-weight: 900;
   color: #000000;
   text-align: center;
@@ -23,6 +23,7 @@
   flex-direction: column;
   gap: 10px;
   margin-bottom: 20px;
+  text-align: center
 }
 
 .tt-label {
@@ -30,6 +31,7 @@
   flex-direction: column;
   font-size: 13px;
   color: #374151;
+  text-align: center
 }
 
 .tt-textarea {
@@ -45,7 +47,7 @@
   outline: none;
   transition: box-shadow .12s ease, border-color .12s ease;
   font-family: inherit;
-  width: 100%;
+  width: 80%;
 }
 
 .tt-textarea:focus {
