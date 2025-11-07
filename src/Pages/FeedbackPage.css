@@ -47,8 +47,7 @@
   outline: none;
   transition: box-shadow .12s ease, border-color .12s ease;
   font-family: inherit;
-  width: 100%;
-}
+  }
 
 .tt-textarea:focus {
   border-color: #6366f1;
