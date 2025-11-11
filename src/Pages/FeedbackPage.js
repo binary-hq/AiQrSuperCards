@@ -10,86 +10,95 @@ export default function TwoTextareas() {
   const [currentIndex, setCurrentIndex] = useState(null);
 
   let { id } = useParams();
-
-  const [labelText, setLabelText] = useState("First textarea");
-
-
-
+  const [labelText, setLabelText] = useState("Customer Review");
 
   useEffect(() => {
-  // ✅ Your new Google Sheet ID
-  const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
+    const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
 
-  const params = new URLSearchParams(window.location.search);
-  const sheetName = id || params.get("Sheet1");
+    const params = new URLSearchParams(window.location.search);
+    // ✅ Correct URL param usage + fallback
+    const sheetName = id || params.get("sheet") || "Sheet1";
 
-  if (!sheetName) {
-    alert("No sheet name provided!");
-    return;
-  }
+    if (!sheetName) {
+      alert("No sheet name provided!");
+      return;
+    }
 
-  const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
-    sheetName
-  )}`;
+    const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
+      sheetName
+    )}`;
 
-  fetch(SHEET_CSV_URL)
-    .then((res) => {
-      if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
-      return res.text();
-    })
-    .then((csvText) => {
-      const rows = csvText.split("\n").map((r) =>
-        r.split(",").map((c) => c.trim().replace(/^"|"$/g, ""))
-      );
+    fetch(SHEET_CSV_URL)
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load sheet: ${sheetName}`);
+        return res.text();
+      })
+      .then((csvText) => {
+        // ✅ Robust CSV parser (handles commas inside quotes)
+        const rows = csvText
+          .trim()
+          .split("\n")
+          .map((r) =>
+            r
+              .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+              .map((c) => c.replace(/^"|"$/g, ""))
+          );
 
-      const suggestionsArr = [];
-      let link = "";
-      let nameLabel = "";
+        if (rows.length < 2) {
+          alert(`No data found in sheet "${sheetName}"`);
+          return;
+        }
 
-      // ✅ Find "Name" header and take C2 (name value)
-      const headerRow = rows[0];
-      const nameIndex = headerRow.indexOf("Name");
-      if (nameIndex !== -1 && rows[1] && rows[1][nameIndex]) {
-        nameLabel = rows[1][nameIndex];
-      }
+        const headerRow = rows[0];
+        const nameIndex = headerRow.findIndex(
+          (h) => h.toLowerCase() === "name"
+        );
 
-      rows.slice(1).forEach((row) => {
-        if (row[0]) suggestionsArr.push(row[0]);
-        if (!link && row[1]) link = row[1];
+        // ✅ Label fallback
+        if (nameIndex > -1 && rows[1]?.[nameIndex]) {
+          setLabelText(rows[1][nameIndex]);
+        } else {
+          setLabelText("Customer Review");
+        }
+
+        const suggestionsArr = [];
+        let link = "";
+
+        rows.slice(1).forEach((row) => {
+          // ✅ Prevent blank suggestions
+          if (row[0] && row[0].length > 2) {
+            suggestionsArr.push(row[0]);
+          }
+          // ✅ Take last non-empty link in column B
+          if (row[1]) link = row[1];
+        });
+
+        if (suggestionsArr.length === 0) {
+          alert(`No suggestions found in sheet "${sheetName}"`);
+          return;
+        }
+
+        setSuggestions(suggestionsArr);
+        setSheetLink(link || "");
+
+        const index = Math.floor(Math.random() * suggestionsArr.length);
+        setLeft(suggestionsArr[index]);
+        setCurrentIndex(index);
+        setUsedIndexes([index]);
+      })
+      .catch((err) => {
+        console.error(err);
+        alert(`Error loading data for sheet "${sheetName}".`);
       });
-
-      if (suggestionsArr.length === 0) {
-        alert(`No data found in sheet "${sheetName}"`);
-        return;
-      }
-
-      setSuggestions(suggestionsArr);
-      setSheetLink(link || "");
-      const index = Math.floor(Math.random() * suggestionsArr.length);
-      setLeft(suggestionsArr[index]);
-      setCurrentIndex(index);
-      setUsedIndexes([index]);
-
-      // ✅ set label value (C2)
-      if (nameLabel) {
-        setLabelText(nameLabel);
-      }
-    })
-    .catch((err) => {
-      console.error(err);
-      alert(`Error loading data for sheet "${sheetName}".`);
-    });
-}, [id]);
-
+  }, [id]);
 
   const handleCopy = async () => {
     if (left.trim() !== "") {
       try {
         await navigator.clipboard.writeText(left);
 
-        // ✅ Redirect to sheet-level link (one link per sheet)
         if (sheetLink) {
-          window.open(sheetLink, "_blank"); // opens in a new tab
+          window.open(sheetLink, "_blank");
         } else {
           alert("No link found for this sheet.");
         }
@@ -104,22 +113,20 @@ export default function TwoTextareas() {
   const handleNewSuggestion = () => {
     if (suggestions.length === 0) return;
 
+    if (usedIndexes.length >= suggestions.length) {
+      // ✅ Reset once all suggestions seen
+      setUsedIndexes([]);
+    }
+
     let index;
     do {
       index = Math.floor(Math.random() * suggestions.length);
-    } while (usedIndexes.includes(index) && usedIndexes.length < suggestions.length);
+    } while (usedIndexes.includes(index));
 
     setLeft(suggestions[index]);
     setCurrentIndex(index);
     setUsedIndexes([...usedIndexes, index]);
   };
-
-
-
-
-
-
-
 
   return (
     <div className="tt-wrapper">
@@ -135,9 +142,11 @@ export default function TwoTextareas() {
             rows={6}
           />
         </label>
+
         <button type="button" className="tt-btn" onClick={handleCopy}>
           Copy & Review
         </button>
+
         <button
           type="button"
           className="tt-btn tt-btn-secondary"
