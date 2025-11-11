@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./FeedbackPage.css";
 import { useParams } from "react-router-dom";
 
-export default function TwoTextareas() {
+export default function FeedbackPage() {
   const [left, setLeft] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [usedIndexes, setUsedIndexes] = useState([]);
@@ -13,7 +13,6 @@ export default function TwoTextareas() {
 
   useEffect(() => {
     const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
-
     const params = new URLSearchParams(window.location.search);
     const sheetName = id || params.get("sheet") || "Sheet1";
 
@@ -56,9 +55,7 @@ export default function TwoTextareas() {
         let link = "";
 
         rows.slice(1).forEach((row) => {
-          if (row[0] && row[0].length > 2) {
-            suggestionsArr.push(row[0]);
-          }
+          if (row[0] && row[0].length > 2) suggestionsArr.push(row[0]);
           if (row[1]) link = row[1];
         });
 
@@ -78,42 +75,41 @@ export default function TwoTextareas() {
   }, [id]);
 
   const handleCopy = async () => {
-    if (left.trim() !== "") {
-      try {
-        await navigator.clipboard.writeText(left);
-
-        // ✅ Delete from Google Sheet using Apps Script
-        await fetch("YOUR_GOOGLE_WEB_APP_URL", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: left,
-            sheetName: id || new URLSearchParams(window.location.search).get("sheet") || "Sheet1"
-          })
-        });
-
-        // ✅ Load new suggestion after delete
-        handleNewSuggestion();
-
-        if (sheetLink) {
-          window.open(sheetLink, "_blank");
-        } else {
-          alert("No link found for this sheet.");
-        }
-      } catch (err) {
-        alert("Failed to copy text.");
-      }
-    } else {
+    if (left.trim() === "") {
       alert("No text to copy.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(left);
+
+      // ✅ Delete from Google Sheet via Apps Script
+      await fetch("YOUR_GOOGLE_WEB_APP_URL", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: left,
+          sheetName: id || new URLSearchParams(window.location.search).get("sheet") || "Sheet1",
+        }),
+      });
+
+      // ✅ Load next suggestion
+      handleNewSuggestion();
+
+      if (sheetLink) {
+        window.open(sheetLink, "_blank");
+      } else {
+        alert("No link found for this sheet.");
+      }
+    } catch (err) {
+      alert("Failed to copy text.");
     }
   };
 
   const handleNewSuggestion = () => {
     if (suggestions.length === 0) return;
 
-    if (usedIndexes.length >= suggestions.length) {
-      setUsedIndexes([]);
-    }
+    if (usedIndexes.length >= suggestions.length) setUsedIndexes([]);
 
     let index;
     do {
@@ -129,7 +125,6 @@ export default function TwoTextareas() {
       <div className="tt-section">
         <label className="tt-label">
           {labelText}
-
           <textarea
             value={left}
             onChange={(e) => setLeft(e.target.value)}
