@@ -7,22 +7,15 @@ export default function TwoTextareas() {
   const [suggestions, setSuggestions] = useState([]);
   const [usedIndexes, setUsedIndexes] = useState([]);
   const [sheetLink, setSheetLink] = useState("");
-  const [currentIndex, setCurrentIndex] = useState(null);
+  const [labelText, setLabelText] = useState("Customer Review");
 
   let { id } = useParams();
-  const [labelText, setLabelText] = useState("Customer Review");
 
   useEffect(() => {
     const SPREADSHEET_ID = "1_1SEyzilt-oAZkojg-lNV8rjCvkdO0q05DWylV_aHBg";
 
     const params = new URLSearchParams(window.location.search);
-    // ✅ Correct URL param usage + fallback
     const sheetName = id || params.get("sheet") || "Sheet1";
-
-    if (!sheetName) {
-      alert("No sheet name provided!");
-      return;
-    }
 
     const SHEET_CSV_URL = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(
       sheetName
@@ -34,7 +27,6 @@ export default function TwoTextareas() {
         return res.text();
       })
       .then((csvText) => {
-        // ✅ Robust CSV parser (handles commas inside quotes)
         const rows = csvText
           .trim()
           .split("\n")
@@ -54,7 +46,6 @@ export default function TwoTextareas() {
           (h) => h.toLowerCase() === "name"
         );
 
-        // ✅ Label fallback
         if (nameIndex > -1 && rows[1]?.[nameIndex]) {
           setLabelText(rows[1][nameIndex]);
         } else {
@@ -65,26 +56,20 @@ export default function TwoTextareas() {
         let link = "";
 
         rows.slice(1).forEach((row) => {
-          // ✅ Prevent blank suggestions
           if (row[0] && row[0].length > 2) {
             suggestionsArr.push(row[0]);
           }
-          // ✅ Take last non-empty link in column B
           if (row[1]) link = row[1];
         });
-
-        if (suggestionsArr.length === 0) {
-          alert(`No suggestions found in sheet "${sheetName}"`);
-          return;
-        }
 
         setSuggestions(suggestionsArr);
         setSheetLink(link || "");
 
-        const index = Math.floor(Math.random() * suggestionsArr.length);
-        setLeft(suggestionsArr[index]);
-        setCurrentIndex(index);
-        setUsedIndexes([index]);
+        if (suggestionsArr.length > 0) {
+          const index = Math.floor(Math.random() * suggestionsArr.length);
+          setLeft(suggestionsArr[index]);
+          setUsedIndexes([index]);
+        }
       })
       .catch((err) => {
         console.error(err);
@@ -96,6 +81,19 @@ export default function TwoTextareas() {
     if (left.trim() !== "") {
       try {
         await navigator.clipboard.writeText(left);
+
+        // ✅ Delete from Google Sheet using Apps Script
+        await fetch("YOUR_GOOGLE_WEB_APP_URL", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            text: left,
+            sheetName: id || new URLSearchParams(window.location.search).get("sheet") || "Sheet1"
+          })
+        });
+
+        // ✅ Load new suggestion after delete
+        handleNewSuggestion();
 
         if (sheetLink) {
           window.open(sheetLink, "_blank");
@@ -114,7 +112,6 @@ export default function TwoTextareas() {
     if (suggestions.length === 0) return;
 
     if (usedIndexes.length >= suggestions.length) {
-      // ✅ Reset once all suggestions seen
       setUsedIndexes([]);
     }
 
@@ -124,7 +121,6 @@ export default function TwoTextareas() {
     } while (usedIndexes.includes(index));
 
     setLeft(suggestions[index]);
-    setCurrentIndex(index);
     setUsedIndexes([...usedIndexes, index]);
   };
 
